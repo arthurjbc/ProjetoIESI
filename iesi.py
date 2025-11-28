@@ -5,7 +5,6 @@ from barcode.writer import ImageWriter
 from PIL import Image, ImageDraw, ImageFont
 import os
 
-# --- Funções Principais ---
 
 def centralizar_texto(draw, texto, fonte, largura_imagem):
     bbox = fonte.getbbox(texto)
@@ -94,11 +93,9 @@ def gerar_etiqueta():
 ^XZ
 
 """
-        # Salva o arquivo ZPL com encoding UTF-8 (importante para acentos)
         with open(zpl_filename, "w", encoding="utf-8") as f:
             f.write(zpl_template)
 
-        # --- 5. Finalização ---
 
         messagebox.showinfo("Sucesso", 
                             f"Etiqueta gerada com sucesso!\n\n"
@@ -113,9 +110,6 @@ def gerar_etiqueta():
         messagebox.showerror("Erro na Geração", f"Ocorreu um erro: {e}")
         if os.path.exists(barcode_temp_file):
             os.remove(barcode_temp_file)
-
-
-# --- Configuração da Interface Gráfica (Tkinter) ---
 
 root = tk.Tk()
 root.title("Gerador de Etiqueta de Exame")
