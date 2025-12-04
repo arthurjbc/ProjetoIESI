@@ -47,10 +47,11 @@ def gerar_zpl_string(paciente, exame_atual, index_exame):
 
 ^FO10,100^GB380,0,2^FS 
 
+^FO10,110^A0N,10,10^FDTIPO: SANGUE^FS
 ^FO10,120^A0N,30,30^FDEXAME ({index_exame + 1}/{paciente['qtd_lem']})^FS
 ^FO10,155^FB380,2,0,L,0^A0N,25,25^FD{exame_abrev}^FS
 
-^FO20,200^BY2,2,30^BCN,30,N,N,N^FD{paciente['id']}-{paciente['nome']}^FS
+^FO20,180^BY2,2,30^BCN,30,N,N,N^FD{paciente['id']}-{paciente['nome']}^FS
 
 ^XZ
 """
@@ -123,7 +124,7 @@ def gerar_imagem_pillow(paciente, exame_atual, index_exame, filename):
         
         # Centraliza e cola na parte inferior
         pos_x = (LARGURA_DOTS - barcode_img.width) // 2
-        pos_y = 185 # Posição Y ajustada para o rodapé
+        pos_y = 150 # Posição Y ajustada para o rodapé
         
         img.paste(barcode_img, (pos_x, pos_y))
 
