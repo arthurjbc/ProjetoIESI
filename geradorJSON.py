@@ -45,10 +45,18 @@ def gerar_json():
 
     dict_fim = relatorio_pcte(headers_auth)
     
+    list_pop = []
+
     for dados in response_rel_age.json()["data"]:
         for dadosDict in dict_fim:
-            if (dados['idPcte'] == int(dadosDict)):
+            if (dados['idPcte'] == int(dadosDict) and dados['deletado'] == 0):
                 dict_fim[str(dados['idPcte'])]['data'] = dados['data'] + ' ' + dados['hora']
+        if (dados['deletado'] == 1):
+            list_pop.append(str(dados['idPcte']))
+
+    for i in list_pop:
+        del dict_fim[i]
+
     print("Dicionario criado com data exame")
 
     with open(f'{data}.json', 'w', encoding='utf-8') as f:
