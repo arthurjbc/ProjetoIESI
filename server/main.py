@@ -6,12 +6,15 @@ root.geometry("1024x768")
 
 carregar_tela_login()
 
+def ao_fechar():
+    with open(".env", 'w') as f:
+        f.write("")
+    try:
+        shutil.rmtree("etiquetas_geradas")
+    except:
+        pass
+    root.destroy()
+
+root.protocol("WM_DELETE_WINDOW", ao_fechar)
+
 root.mainloop()
-
-with open(".env", 'w') as f:
-    f.write("")
-import shutil
-
-caminhoWin = "C:/Users/"
-
-shutil.rmtree("etiquetas_geradas")

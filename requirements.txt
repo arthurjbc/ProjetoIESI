@@ -3,3 +3,4 @@ dotenv
 python-barcode
 pywin32
 pillow
+pyinstaller --noconsole --onefile --name="SistemaEtiquetas" server/main.py 
