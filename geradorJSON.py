@@ -23,18 +23,25 @@ def logar():
 def get_data():
     amanha = date.today() + timedelta(days=1)
     resultado = amanha.strftime("%d-%m-%Y")
-    return resultado
+    return "05-12-2025"
 
 def relatorio_pcte(headers_auth):
     dict_fim = {}
     data = get_data()
     url_pcte = f'https://api.tisaude.com/api/reports/patients?relatorio=Anal%C3%ADtico&idade=anos&status=TODOS&estadocivil=TODOS&sexo=TODOS&genero=TODOS&wp=0&retornoJson=true&inicioAgendamento={data}&fimAgendamento={data}'
 
+    list_pop = []
     response_pcte = requests.get(url_pcte, headers=headers_auth)
     for i in response_pcte.json()["data"]:
         dict_fim[str(i['id'])] = {'id' : i['id'], 'nome' : i['nome'], 'data_n' : i['nascimento'], 'lembretes' : str(i['lembretes']).split(', '), 'qtd_lem' : len(str(i['lembretes']).split(', '))}
+        if (i['deletado'] == 1):
+            list_pop.append(str(i['id']))
+
+    for i in list_pop:
+        del dict_fim[i]
+
     print("Dicionario criado sem data exame")
-    return dict_fim
+    return dict_fim, list_pop
 
 def gerar_json():
     data = get_data()
@@ -43,7 +50,7 @@ def gerar_json():
     headers_auth = logar()
     response_rel_age = requests.get(url_get_relatorio_agendamento, headers=headers_auth)
 
-    dict_fim = relatorio_pcte(headers_auth)
+    dict_fim, lista_popado_anterior = relatorio_pcte(headers_auth)
     
     list_pop = []
 
@@ -55,10 +62,12 @@ def gerar_json():
             list_pop.append(str(dados['idPcte']))
 
     for i in list_pop:
-        del dict_fim[i]
+        if (i not in lista_popado_anterior):
+            del dict_fim[i]
 
     print("Dicionario criado com data exame")
-
+    return dict_fim
+    '''
     with open(f'{data}.json', 'w', encoding='utf-8') as f:
         json.dump(
             dict_fim, 
@@ -66,6 +75,6 @@ def gerar_json():
             indent=4,           
             ensure_ascii=False, 
         )
-        print("Arquivo json criado")
+        print("Arquivo json criado")'''
 
-gerar_json()
+print(gerar_json())
