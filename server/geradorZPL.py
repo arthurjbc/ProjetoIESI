@@ -42,7 +42,7 @@ def gerar_zpl_string(paciente, exame_atual, index_exame):
 ^FO10,120^A0N,30,30^FDEXAME ({index_exame + 1}/{paciente['qtd_lem']})^FS
 ^FO10,155^FB380,2,0,L,0^A0N,25,25^FD{exame_abrev}^FS
 
-^FO5,180^BY2,2,30^BCN,30,N,N,N^FD{paciente['id']}-{paciente['nome']}^FS
+^FO15,180^BY2,2,30^BCN,30,N,N,N^FD{paciente['id']}-{paciente['nome']}^FS
 
 ^XZ
 """
