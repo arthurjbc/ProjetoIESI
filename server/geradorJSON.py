@@ -21,10 +21,10 @@ def logar():
     return headers_auth
 
 def get_data():
-    #return date.today()
-    amanha = date.today() + timedelta(days=1)
+    return date.today()
+    #amanha = date.today() + timedelta(days=1)
     #return amanha.strftime("%d-%m-%Y")
-    return "08-12-2025"
+    #return "08-12-2025"
 
 def relatorio_pcte(headers_auth):
     dict_fim = {}
