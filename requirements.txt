@@ -1,0 +1,5 @@
+requests
+dotenv
+python-barcode
+pywin32
+pillow
