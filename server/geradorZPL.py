@@ -6,10 +6,11 @@ from PIL import Image, ImageDraw, ImageFont
 import tkinter as tk
 from tkinter import filedialog, messagebox
 
+# Importa a função que retorna o dicionário
+from geradorJSON import gerar_json 
+
 # --- CONFIGURAÇÕES GERAIS (50mm x 30mm) ---
 # Considerando impressora 203 DPI (8 dots/mm)
-# Largura: 50mm * 8 = 400 dots
-# Altura: 30mm * 8 = 240 dots
 LARGURA_DOTS = 400
 ALTURA_DOTS = 240
 
@@ -20,21 +21,15 @@ def carregar_fonte(tamanho=20, bold=False):
             return ImageFont.truetype("arialbd.ttf", tamanho)
         return ImageFont.truetype("arial.ttf", tamanho)
     except IOError:
-        # Fallback se não tiver Arial
         return ImageFont.load_default()
 
 def gerar_zpl_string(paciente, exame_atual, index_exame):
     """
     Gera o código ZPL puro para uma etiqueta de 50x30mm.
     """
-    # Tratamento de Strings para evitar quebra de layout ZPL
-    nome_abrev = paciente['nome'][:25] # Limita caracteres
+    nome_abrev = paciente['nome'][:25] 
     exame_abrev = exame_atual[:25]
     
-    # ^XA: Inicio
-    # ^PW400: Largura de impressão
-    # ^LL240: Comprimento da etiqueta
-    # ^CI28: Encoding UTF-8 (para acentos)
     zpl = f"""
 ^XA
 ^PW{LARGURA_DOTS}
@@ -61,101 +56,77 @@ def gerar_imagem_pillow(paciente, exame_atual, index_exame, filename):
     """
     Gera uma imagem PNG simulando a etiqueta com código de barras real.
     """
-    # Cria canvas branco
     img = Image.new('RGB', (LARGURA_DOTS, ALTURA_DOTS), 'white')
     draw = ImageDraw.Draw(img)
     
-    # Fontes
     font_nome = carregar_fonte(28, bold=True)
     font_texto = carregar_fonte(22)
     font_destaque = carregar_fonte(26, bold=True)
     
     # --- Desenhando na Imagem ---
-    
-    # Linha 1: Nome
     draw.text((10, 10), f"{paciente['nome'][:28]}", fill="black", font=font_nome)
-    
-    # Linha 2: ID e DN
     draw.text((10, 45), f"ID: {paciente['id']}   DN: {paciente['data_n']}", fill="black", font=font_texto)
-    
-    # Linha 3: Data do pedido
     draw.text((10, 75), f"Data: {paciente['data'][:10]}", fill="black", font=font_texto)
-    
-    # Linha Divisória
     draw.line([(10, 105), (390, 105)], fill="black", width=2)
-    
-    # Linha 4: Título do Exame e Contador
     draw.text((10, 115), f"EXAME ({index_exame + 1}/{paciente['qtd_lem']})", fill="black", font=font_destaque)
-    
-    # Linha 5: Nome do Exame
     draw.text((10, 150), exame_atual, fill="black", font=font_texto)
     
     # --- Geração do Código de Barras Real ---
     try:
-        # Dados do barcode: ID e Nome concatenados conforme solicitado
         dados_barcode = f"{paciente['id']}-{paciente['nome']}"
-        
-        # Usando Code128
         CODE128 = barcode.get_barcode_class('code128')
         writer = ImageWriter()
-        
-        # Instancia o barcode
         my_barcode = CODE128(dados_barcode, writer=writer)
         
-        # Opções para ajustar o tamanho na etiqueta pequena
         options = {
-            'module_width': 0.25,  # Barras mais finas
-            'module_height': 8.0,  # Altura das barras
-            'quiet_zone': 1.0,     # Margem branca menor
-            'font_size': 0,        # Sem texto dentro do barcode (já temos texto na etiqueta)
+            'module_width': 0.25,
+            'module_height': 8.0,
+            'quiet_zone': 1.0, 
+            'font_size': 0,
             'text_distance': 0,
             'write_text': False
         }
         
-        # Renderiza para um objeto PIL Image
         barcode_img = my_barcode.render(options)
         
-        # Verifica se o código de barras ficou maior que a largura da etiqueta (com margens)
         largura_maxima = 380
         if barcode_img.width > largura_maxima:
             ratio = largura_maxima / barcode_img.width
             nova_altura = int(barcode_img.height * ratio)
             barcode_img = barcode_img.resize((largura_maxima, nova_altura), Image.Resampling.LANCZOS)
         
-        # Centraliza e cola na parte inferior
         pos_x = (LARGURA_DOTS - barcode_img.width) // 2
-        pos_y = 150 # Posição Y ajustada para o rodapé
+        pos_y = 150 
         
         img.paste(barcode_img, (pos_x, pos_y))
 
     except Exception as e:
         print(f"Erro ao gerar barcode para imagem: {e}")
-        # Fallback visual em caso de erro
         draw.rectangle([(10, 190), (390, 230)], fill="black")
         draw.text((20, 200), "ERRO BARCODE", fill="white", font=carregar_fonte(15))
 
     img.save(filename)
 
-def processar_json():
-    """Lê o arquivo JSON e gera as etiquetas."""
+def processar_dados():
+    """Obtém o dicionário direto da função e gera as etiquetas."""
     
-    # 1. Selecionar arquivo
-    filepath = filedialog.askopenfilename(title="Selecione o arquivo JSON", filetypes=[("JSON Files", "*.json")])
-    if not filepath:
-        return
-
     output_dir = "etiquetas_geradas"
     output_dir_png = "etiquetasPNG"
+    
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
     if not os.path.exists(output_dir_png):
         os.makedirs(output_dir_png)
-   
 
     try:
-        with open(filepath, 'r', encoding='utf-8') as f:
-            dados = json.load(f)
+        # --- ALTERAÇÃO PRINCIPAL AQUI ---
+        # Chama a função importada para obter o dicionário diretamente
+        dados = gerar_json() 
+        
+        if not dados:
+            messagebox.showwarning("Aviso", "A função gerar_json retornou dados vazios.")
+            return
 
         contador_arquivos = 0
 
@@ -167,11 +138,10 @@ def processar_json():
             # Itera sobre cada lembrete (exame) do paciente
             for i, exame in enumerate(lembretes):
                 safe_nome = paciente['nome'].replace(" ", "_")
-                safe_exame = exame.replace(" ", "_")[:10]
-                
+                # Remove caracteres proibidos em nomes de arquivo se necessário
                 base_name = f"{paciente['id']}_{safe_nome}_{i+1}"
+                
                 path_zpl = os.path.join(output_dir, f"{base_name}.zpl")
-
                 path_png = os.path.join(output_dir_png, f"{base_name}.png")
 
                 # 1. Gerar ZPL
@@ -184,10 +154,10 @@ def processar_json():
                 
                 contador_arquivos += 1
 
-        messagebox.showinfo("Concluído", f"Processamento finalizado!\n{contador_arquivos} etiquetas geradas na pasta '{output_dir}'.")
+        messagebox.showinfo("Concluído", f"Processamento finalizado!\n{contador_arquivos} etiquetas geradas.")
 
     except Exception as e:
-        messagebox.showerror("Erro", f"Erro ao processar JSON: {str(e)}")
+        messagebox.showerror("Erro", f"Erro ao processar dados: {str(e)}")
 
 # --- GUI Principal ---
 root = tk.Tk()
@@ -197,10 +167,11 @@ root.geometry("400x200")
 frame = tk.Frame(root, padx=20, pady=20)
 frame.pack(expand=True)
 
-btn_processar = tk.Button(frame, text="Selecionar JSON e Gerar Etiquetas", command=processar_json, bg="#4CAF50", fg="white")
+# Botão atualizado para chamar a nova função
+btn_processar = tk.Button(frame, text="Gerar Etiquetas (Direto)", command=processar_dados, bg="#4CAF50", fg="white")
 btn_processar.pack(fill=tk.X, pady=10)
 
-lbl_info = tk.Label(frame, text="\nFormatos: .ZPL e .PNG", fg="gray")
+lbl_info = tk.Label(frame, text="\nLê diretamente de 'gerar_json()'\nSaída: .ZPL e .PNG", fg="gray")
 lbl_info.pack(pady=5)
 
 root.mainloop()
