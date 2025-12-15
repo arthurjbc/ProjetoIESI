@@ -21,9 +21,10 @@ def logar():
     return headers_auth
 
 def get_data():
+    #return date.today()
     amanha = date.today() + timedelta(days=1)
-    resultado = amanha.strftime("%d-%m-%Y")
-    return "05-12-2025"
+    #return amanha.strftime("%d-%m-%Y")
+    return "08-12-2025"
 
 def relatorio_pcte(headers_auth):
     dict_fim = {}
@@ -51,8 +52,13 @@ def gerar_json():
     response_rel_age = requests.get(url_get_relatorio_agendamento, headers=headers_auth)
 
     dict_fim, lista_popado_anterior = relatorio_pcte(headers_auth)
-    
+    print (dict_fim)
+    if dict_fim == {}:
+        print("sem agendamentos")
+        return {}
+
     list_pop = []
+    
 
     for dados in response_rel_age.json()["data"]:
         for dadosDict in dict_fim:
@@ -76,5 +82,3 @@ def gerar_json():
             ensure_ascii=False, 
         )
         print("Arquivo json criado")'''
-
-print(gerar_json())

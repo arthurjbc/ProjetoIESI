@@ -1,5 +1,6 @@
 import win32print
 import os
+from tkinter import messagebox
 
 # --- CONFIGURAÇÃO ---
 # Nome da impressora ZEBRA ou de etiquetas (Use o nome exato)
@@ -34,22 +35,22 @@ def enviar_zpl_para_impressora(nome_imp, arquivo_path):
 
     except Exception as e:
         print(f"Erro ao imprimir {arquivo_path}: {e}")
+def imprimir_zpl():
+    # --- BLOCO PRINCIPAL ---
+    # Verifica se a impressora existe primeiro
+    try:
+        # Testa se conseguimos conectar na impressora
+        # Se der erro aqui, o nome está errado ou sem permissão
+        h = win32print.OpenPrinter(nome_impressora)
+        win32print.ClosePrinter(h)
+        print(f"Impressora '{nome_impressora}' conectada!")
+        
+        arquivos = os.listdir(pasta_arquivos)
+        for arquivo in arquivos:
+            # Filtra apenas arquivos de texto ou .zpl
+            if arquivo.endswith(".txt") or arquivo.endswith(".zpl"):
+                caminho_completo = os.path.join(pasta_arquivos, arquivo)
+                enviar_zpl_para_impressora(nome_impressora, caminho_completo)
 
-# --- BLOCO PRINCIPAL ---
-# Verifica se a impressora existe primeiro
-try:
-    # Testa se conseguimos conectar na impressora
-    # Se der erro aqui, o nome está errado ou sem permissão
-    h = win32print.OpenPrinter(nome_impressora)
-    win32print.ClosePrinter(h)
-    print(f"Impressora '{nome_impressora}' conectada!")
-    
-    arquivos = os.listdir(pasta_arquivos)
-    for arquivo in arquivos:
-        # Filtra apenas arquivos de texto ou .zpl
-        if arquivo.endswith(".txt") or arquivo.endswith(".zpl"):
-            caminho_completo = os.path.join(pasta_arquivos, arquivo)
-            enviar_zpl_para_impressora(nome_impressora, caminho_completo)
-
-except Exception as e:
-    print(f"Não foi possível conectar na impressora: {e}")
+    except Exception as e:
+        messagebox.showerror("Erro", f"Não foi possível conectar na impressora: {e}")
