@@ -75,7 +75,7 @@ class ZPLGeneratorApp:
             else:
                 df = pd.read_excel(input_file)
             
-            required_cols = ['nome_paciente', 'exame', 'data_nascimento']
+            required_cols = ['nome_paciente', 'exame', 'idade']
             df.columns = [c.lower().replace(' ', '_') for c in df.columns]
             
             missing = [col for col in required_cols if col not in df.columns]
@@ -90,15 +90,7 @@ class ZPLGeneratorApp:
                 
                 nome = str(row.get('nome_paciente', ''))
                 exame = str(row.get('exame', ''))
-                nasc_raw = row.get('data_nascimento')
-                if pd.notnull(nasc_raw):
-                    if isinstance(nasc_raw, (pd.Timestamp, date)):
-                        nasc = nasc_raw.strftime("%d/%m/%Y")
-                    else:
-                        nasc = str(nasc_raw)[:10]
-                else:
-                    nasc = "N/A"
-                
+                nasc = row.get('idade')
                 zpl_content = f"""
 ^XA
 ^PW400
@@ -114,7 +106,7 @@ class ZPLGeneratorApp:
 ^FO10,110^A0N,30,25^FDTIPO: SANGUE^FS
 ^FO10,155^FB380,2,0,L,0^A0N,25,25^FD{exame.capitalize()}^FS
 
-^FO15,180^BY2,2,30^BCN,30,N,N,N^FD{nome.capitalize()}{row_id}^FS
+^FO15,180^BY2,2,30^BCN,30,N,N,N^FD{nome.capitalize()[:15]}{row_id}^FS
 
 ^XZ
 """
