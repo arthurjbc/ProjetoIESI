@@ -90,7 +90,14 @@ class ZPLGeneratorApp:
                 
                 nome = str(row.get('nome_paciente', ''))
                 exame = str(row.get('exame', ''))
-                nasc = str(row.get('data_nascimento', ''))
+                nasc_raw = row.get('data_nascimento')
+                if pd.notnull(nasc_raw):
+                    if isinstance(nasc_raw, (pd.Timestamp, date)):
+                        nasc = nasc_raw.strftime("%d/%m/%Y")
+                    else:
+                        nasc = str(nasc_raw)[:10]
+                else:
+                    nasc = "N/A"
                 
                 zpl_content = f"""
 ^XA
